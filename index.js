@@ -1,5 +1,5 @@
 import { mat3 } from "gl-matrix/lib/gl-matrix.js";
-import "./style.css";
+// import "./style.css";
 import {
   vertexShaderSource,
   fragmentShaderSource,
@@ -17,6 +17,24 @@ class SnowFlake {
     this.r = r;
     this.vx = vx;
     this.vy = vy;
+
+    this.vertices = this.getVertices();
+  }
+
+  get translation() {
+    return [this.x, this.y];
+  }
+
+  get rotation() {
+    return [this.randBetween(0, 2 * Math.PI)];
+  }
+
+  get scaling() {
+    return [this.r, this.r];
+  }
+
+  get velocity() {
+    return [this.vx, this.vy];
   }
 
   get transformMatrix() {
@@ -38,9 +56,20 @@ class SnowFlake {
     return matrix;
   }
 
-  vertices() {
+  get projectionMatrix() {
+    let matrix = [];
+    mat3.identity(matrix);
+    mat3.projection(
+      matrix,
+      this.gl.canvas.clientWidth,
+      this.gl.canvas.clientHeight
+    );
+    return matrix;
+  }
+
+  getVertices() {
     let vertices = [];
-    for (let i = 0; i <= 360; i++) {
+    for (let i = 0; i <= 360; i += 36) {
       const angle = (i / 180) * Math.PI;
       const vertice1 = [Math.cos(angle), Math.sin(angle)];
       const vertice2 = [0, 0];
@@ -67,9 +96,23 @@ class SnowFlake {
     const program = createProgram(gl, vertexShader, fragmentShader);
 
     const verticeAttribLocation = gl.getAttribLocation(program, "a_vertice");
-    const transformUniformLocation = gl.getUniformLocation(
+    // const transformMatrixUniformLocation = gl.getUniformLocation(program, 'u_transformMatrix');
+    const projectionMatrixUniformLocation = gl.getUniformLocation(
       program,
-      "u_transformMatrix"
+      "u_projectionMatrix"
+    );
+    const translationUniformLocation = gl.getUniformLocation(
+      program,
+      "u_translation"
+    );
+    const rotationUniformLocation = gl.getUniformLocation(
+      program,
+      "u_rotation"
+    );
+    const scalingUniformLocation = gl.getUniformLocation(program, "u_scaling");
+    const velocityUniformLocation = gl.getUniformLocation(
+      program,
+      "u_velocity"
     );
 
     const vertexArrayObject = gl.createVertexArray();
@@ -77,8 +120,11 @@ class SnowFlake {
 
     const verticeBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, verticeBuffer);
-    const vertices = this.vertices();
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(this.vertices),
+      gl.STATIC_DRAW
+    );
     gl.enableVertexAttribArray(verticeBuffer);
     const [size, type, normalize, stride, offset] = [2, gl.FLOAT, false, 0, 0];
     gl.vertexAttribPointer(
@@ -96,13 +142,24 @@ class SnowFlake {
 
     gl.useProgram(program);
     gl.bindVertexArray(vertexArrayObject);
-    gl.uniformMatrix3fv(transformUniformLocation, false, this.transformMatrix);
-    const [mode, offset, count] = [
+
+    // gl.uniformMaMatrixtrix3fv(transformMatrixUniformLocation, false, this.transformMatrix);
+    gl.uniformMatrix3fv(
+      projectionMatrixUniformLocation,
+      false,
+      this.projectionMatrix
+    );
+    gl.uniform2fv(translationUniformLocation, this.translation);
+    gl.uniform1f(rotationUniformLocation, this.rotation);
+    gl.uniform2fv(scalingUniformLocation, this.scaling);
+    gl.uniform2fv(velocityUniformLocation, this.velocity);
+
+    const [mode, offset2, count] = [
       gl.TRIANGLE_STRIP,
       0,
-      vertices.length / size
+      this.vertices.length / size
     ];
-    gl.drawArrays(mode, offset, count);
+    gl.drawArrays(mode, offset2, count);
   }
 
   update(gl) {
@@ -143,7 +200,7 @@ class Snow {
     for (let i = 0; i < flakes; i++) {
       const [x, y] = [
         this.randBetween(0, window.innerWidth),
-        this.randBetween(0, window.innerHeight)
+        this.randBetween(0, window.innerHeight / 2)
       ];
       const r = this.randBetween(1, 4);
       const [vx, vy] = [this.randBetween(-3, 3), this.randBetween(2, 5)];
