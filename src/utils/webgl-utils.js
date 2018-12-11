@@ -7,7 +7,7 @@ export const vertexShaderSource = `#version 300 es
   void main() {
     gl_Position = vec4((a_transformMatrix * vec3(0, 0, 1)).xy, 0, 1);
     // v_color = a_color;
-    v_color = vec4(15, 56, 155, 1);
+    v_color = vec4(1, 1, 1, 1);
   }
 `;
 
@@ -33,7 +33,7 @@ export const flakeVertexShaderSource = `#version 300 es
   out vec4 v_color;
 
   void main() {
-    v_color = vec4(0.8, 0.4, 0.8, 1);
+    v_color = vec4(1, 1, 1, 1);
 
     mat3 translationMatrix = mat3(
       1, 0, 0,
