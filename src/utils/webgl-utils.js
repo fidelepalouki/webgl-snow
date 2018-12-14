@@ -1,24 +1,20 @@
 export const vertexShaderSource = `#version 300 es
-  in mat3 a_transformMatrix;
-  in vec4 a_color;
-
-  out vec4 v_color;
+  in vec3 a_positionAndRadius;
+  uniform mat3 u_projectionMatrix;
 
   void main() {
-    gl_Position = vec4((a_transformMatrix * vec3(0, 0, 1)).xy, 0, 1);
-    // v_color = a_color;
-    v_color = vec4(1, 1, 1, 1);
+    gl_Position = vec4((u_projectionMatrix * vec3(a_positionAndRadius.xy, 1)).xy, 0, 1);
+    gl_PointSize = 2.0 * a_positionAndRadius.z;
   }
 `;
 
 export const fragmentShaderSource = `#version 300 es
   precision mediump float;
 
-  in vec4 v_color;
   out vec4 outColor;
 
   void main() {
-    outColor = v_color;
+    outColor = vec4(1, 1, 1, 1);
   }
 `;
 

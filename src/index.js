@@ -1,3 +1,4 @@
 import { Snow } from "./components/snow.js";
 
-new Snow();
+const canvas = document.querySelector("canvas");
+new Snow(canvas);

@@ -1,13 +1,21 @@
+import { mat3 } from "gl-matrix/lib/gl-matrix.js";
 import { SnowFlake } from "./snow-flake.js";
+import {
+  vertexShaderSource,
+  fragmentShaderSource,
+  createShader,
+  createProgram
+} from "../utils/webgl-utils.js";
 
 export class Snow {
-  constructor() {
-    this.canvas = document.createElement("canvas");
-    document.querySelector("body").appendChild(this.canvas);
-    this.gl = this.canvas.getContext("webgl2");
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.gl = canvas.getContext("webgl2");
+    this.projectionMatrix = this.getProjectionMatrix();
+
+    this.snowFlakes = this.createSnowFlakes();
 
     this.addListeners();
-    this.createSnowFlakes();
     requestAnimationFrame(this.update.bind(this, this.gl));
   }
 
@@ -19,6 +27,7 @@ export class Snow {
   onResize() {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
+    this.projectionMatrix = this.getProjectionMatrix();
   }
 
   randBetween(min, max) {
@@ -26,31 +35,93 @@ export class Snow {
   }
 
   createSnowFlakes() {
-    const flakes = window.innerWidth / 256;
-    console.log({ flakes });
-    this.snowFlakes = [];
-    for (let i = 0; i < flakes; i++) {
-      const [x, y] = [
-        this.randBetween(0, window.innerWidth),
-        this.randBetween(0, window.innerHeight / 2)
-      ];
-      const r = this.randBetween(1, 4);
-      const [vx, vy] = [this.randBetween(-3, 3), this.randBetween(2, 5)];
-      this.snowFlakes.push(new SnowFlake(this.gl, x, y, r, vx, vy));
+    let snowFlakes = [];
+    const count = window.innerWidth / 4;
+    for (let i = 0; i < count; i++) {
+      snowFlakes.push(new SnowFlake());
     }
+    return snowFlakes;
+  }
 
-    this.snowFlakes.forEach(flake => flake.draw(this.gl));
+  getProjectionMatrix() {
+    let matrix = [];
+    mat3.identity(matrix);
+    mat3.projection(
+      matrix,
+      this.gl.canvas.clientWidth,
+      this.gl.canvas.clientHeight
+    );
+    return matrix;
+  }
+
+  get positionsAndRadiuses() {
+    let positionsAndRadiuses = [];
+    for (let snowFlake of this.snowFlakes) {
+      positionsAndRadiuses = [
+        ...positionsAndRadiuses,
+        ...snowFlake.positionAndRadius
+      ];
+    }
+    return positionsAndRadiuses;
   }
 
   update(gl) {
+    this.snowFlakes.forEach(snowFlake => snowFlake.update());
+
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(
+      gl,
+      gl.FRAGMENT_SHADER,
+      fragmentShaderSource
+    );
+    const program = createProgram(gl, vertexShader, fragmentShader);
+
+    const positionAndRadiusAttribLocation = gl.getAttribLocation(
+      program,
+      "a_positionAndRadius"
+    );
+
+    const projectionMatrixUniformLocation = gl.getUniformLocation(
+      program,
+      "u_projectionMatrix"
+    );
+
+    const vertexArrayObject = gl.createVertexArray();
+    gl.bindVertexArray(vertexArrayObject);
+
+    const positionAndRadiusBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionAndRadiusBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array(this.positionsAndRadiuses),
+      gl.STATIC_DRAW
+    );
+    gl.enableVertexAttribArray(positionAndRadiusBuffer);
+    const [size, type, normalize, stride, offset] = [3, gl.FLOAT, false, 0, 0];
+    gl.vertexAttribPointer(
+      positionAndRadiusAttribLocation,
+      size,
+      type,
+      normalize,
+      stride,
+      offset
+    );
+
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT, gl.DEPTH_BUFFER_BIT);
 
-    for (const flake of this.snowFlakes) {
-      flake.update(this.gl);
-    }
+    gl.useProgram(program);
+    gl.bindVertexArray(vertexArrayObject);
 
-    // this.snowFlakes[0].update(this.gl);
+    gl.uniformMatrix3fv(
+      projectionMatrixUniformLocation,
+      false,
+      this.projectionMatrix
+    );
+
+    const [mode, offset2, count] = [gl.POINTS, 0, this.snowFlakes.length];
+    gl.drawArrays(mode, offset2, count);
 
     requestAnimationFrame(this.update.bind(this, gl));
   }
