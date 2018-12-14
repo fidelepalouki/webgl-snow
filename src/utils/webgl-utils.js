@@ -1,63 +1,33 @@
 export const vertexShaderSource = `#version 300 es
-  in vec3 a_positionAndRadius;
+  in vec4 a_snowFlakeProps;
   uniform mat3 u_projectionMatrix;
+  out vec4 v_color;
 
   void main() {
-    gl_Position = vec4((u_projectionMatrix * vec3(a_positionAndRadius.xy, 1)).xy, 0, 1);
-    gl_PointSize = 2.0 * a_positionAndRadius.z;
+    gl_Position = vec4((u_projectionMatrix * vec3(a_snowFlakeProps.xy, 1)).xy, 0, 1);
+    gl_PointSize = 2.0 * a_snowFlakeProps.z;
+    v_color = vec4(1, 1, 1, a_snowFlakeProps.w);
   }
 `;
 
 export const fragmentShaderSource = `#version 300 es
   precision mediump float;
-
-  out vec4 outColor;
-
-  void main() {
-    outColor = vec4(1, 1, 1, 1);
-  }
-`;
-
-export const flakeVertexShaderSource = `#version 300 es
-  in vec2 a_vertice;
-  in vec4 a_color;
-  uniform mat3 u_projectionMatrix;
-  uniform vec2 u_translation;
-  uniform float u_rotation;
-  uniform vec2 u_scaling;
-
-  out vec4 v_color;
-
-  void main() {
-    v_color = vec4(1, 1, 1, 1);
-
-    mat3 translationMatrix = mat3(
-      1, 0, 0,
-      0, 1, 0,
-      u_translation[0], u_translation[1], 1);
-    mat3 rotationMatrix = mat3(
-      cos(u_rotation), -sin(u_rotation), 0,
-      sin(u_rotation), cos(u_rotation), 0,
-      0, 0, 1);
-    mat3 scalingMatrix = mat3(
-      u_scaling[0], 0, 0,
-      0, u_scaling[1], 0,
-      0, 0, 1);
-
-    mat3 transformMatrix = u_projectionMatrix * translationMatrix * rotationMatrix * scalingMatrix;
-
-    gl_Position = vec4((transformMatrix * vec3(a_vertice, 1)).xy, 0, 1);
-  }
-`;
-
-export const flakeFragmentShaderSource = `#version 300 es
-  precision mediump float;
-
   in vec4 v_color;
+
   out vec4 outColor;
 
   void main() {
-    outColor = v_color;
+    lowp vec2 postionToCenter = gl_PointCoord - vec2(0.5, 0.5);
+    lowp float distToCenterSquared = dot(postionToCenter, postionToCenter);
+    lowp float alpha;
+
+    if (distToCenterSquared < 0.25) {
+      alpha = v_color.w;
+    } else {
+      alpha = 0.0;
+    }
+
+    outColor = vec4(v_color.xyz, alpha);
   }
 `;
 

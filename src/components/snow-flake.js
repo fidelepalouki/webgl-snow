@@ -16,8 +16,8 @@ export class SnowFlake {
     return min + (max - min) * Math.random();
   }
 
-  get positionAndRadius() {
-    return [this.x, this.y, this.radius];
+  get snowFlakeProps() {
+    return [this.x, this.y, this.radius, this.alpha];
   }
 
   update() {

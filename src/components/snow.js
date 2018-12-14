@@ -54,15 +54,12 @@ export class Snow {
     return matrix;
   }
 
-  get positionsAndRadiuses() {
-    let positionsAndRadiuses = [];
+  get snowFlakesProps() {
+    let snowFlakesProps = [];
     for (let snowFlake of this.snowFlakes) {
-      positionsAndRadiuses = [
-        ...positionsAndRadiuses,
-        ...snowFlake.positionAndRadius
-      ];
+      snowFlakesProps = [...snowFlakesProps, ...snowFlake.snowFlakeProps];
     }
-    return positionsAndRadiuses;
+    return snowFlakesProps;
   }
 
   update(gl) {
@@ -76,9 +73,9 @@ export class Snow {
     );
     const program = createProgram(gl, vertexShader, fragmentShader);
 
-    const positionAndRadiusAttribLocation = gl.getAttribLocation(
+    const snowFlakePropsAttribLocation = gl.getAttribLocation(
       program,
-      "a_positionAndRadius"
+      "a_snowFlakeProps"
     );
 
     const projectionMatrixUniformLocation = gl.getUniformLocation(
@@ -89,17 +86,17 @@ export class Snow {
     const vertexArrayObject = gl.createVertexArray();
     gl.bindVertexArray(vertexArrayObject);
 
-    const positionAndRadiusBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionAndRadiusBuffer);
+    const snowFlakePropsBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, snowFlakePropsBuffer);
     gl.bufferData(
       gl.ARRAY_BUFFER,
-      new Float32Array(this.positionsAndRadiuses),
+      new Float32Array(this.snowFlakesProps),
       gl.STATIC_DRAW
     );
-    gl.enableVertexAttribArray(positionAndRadiusBuffer);
-    const [size, type, normalize, stride, offset] = [3, gl.FLOAT, false, 0, 0];
+    gl.enableVertexAttribArray(snowFlakePropsBuffer);
+    const [size, type, normalize, stride, offset] = [4, gl.FLOAT, false, 0, 0];
     gl.vertexAttribPointer(
-      positionAndRadiusAttribLocation,
+      snowFlakePropsAttribLocation,
       size,
       type,
       normalize,
@@ -113,6 +110,9 @@ export class Snow {
 
     gl.useProgram(program);
     gl.bindVertexArray(vertexArrayObject);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     gl.uniformMatrix3fv(
       projectionMatrixUniformLocation,
