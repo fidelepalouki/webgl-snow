@@ -1,7 +1,7 @@
-export const vertexShaderSource = `#version 300 es
-  in vec4 a_snowFlakeProps;
+export const vertexShaderSource = `
+  attribute vec4 a_snowFlakeProps;
   uniform mat3 u_projectionMatrix;
-  out vec4 v_color;
+  varying vec4 v_color;
 
   void main() {
     gl_Position = vec4((u_projectionMatrix * vec3(a_snowFlakeProps.xy, 1)).xy, 0, 1);
@@ -10,11 +10,9 @@ export const vertexShaderSource = `#version 300 es
   }
 `;
 
-export const fragmentShaderSource = `#version 300 es
+export const fragmentShaderSource = `
   precision mediump float;
-  in vec4 v_color;
-
-  out vec4 outColor;
+  varying vec4 v_color;
 
   void main() {
     vec2 distToPointCenter = gl_PointCoord - vec2(0.5, 0.5);
@@ -27,7 +25,7 @@ export const fragmentShaderSource = `#version 300 es
       alpha = 0.0;
     }
 
-    outColor = vec4(v_color.xyz, alpha);
+    gl_FragColor = vec4(v_color.xyz, alpha);
   }
 `;
 

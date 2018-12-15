@@ -10,7 +10,7 @@ import {
 export class Snow {
   constructor(canvas) {
     this.canvas = canvas;
-    this.gl = canvas.getContext("webgl2");
+    this.gl = canvas.getContext("webgl");
 
     this.projectionMatrix = this.getProjectionMatrix();
 
@@ -80,9 +80,6 @@ export class Snow {
       "u_projectionMatrix"
     );
 
-    const vertexArrayObject = gl.createVertexArray();
-    gl.bindVertexArray(vertexArrayObject);
-
     const snowFlakePropsBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, snowFlakePropsBuffer);
     gl.bufferData(
@@ -106,7 +103,6 @@ export class Snow {
     gl.clear(gl.COLOR_BUFFER_BIT, gl.DEPTH_BUFFER_BIT);
 
     gl.useProgram(program);
-    gl.bindVertexArray(vertexArrayObject);
 
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
