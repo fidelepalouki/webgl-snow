@@ -17,11 +17,11 @@ export const fragmentShaderSource = `#version 300 es
   out vec4 outColor;
 
   void main() {
-    lowp vec2 postionToCenter = gl_PointCoord - vec2(0.5, 0.5);
-    lowp float distToCenterSquared = dot(postionToCenter, postionToCenter);
-    lowp float alpha;
+    vec2 distToPointCenter = gl_PointCoord - vec2(0.5, 0.5);
+    float distToPointCenterSquared = dot(distToPointCenter, distToPointCenter);
+    float alpha;
 
-    if (distToCenterSquared < 0.25) {
+    if (distToPointCenterSquared < 0.25) {
       alpha = v_color.w;
     } else {
       alpha = 0.0;

@@ -5,12 +5,13 @@ import {
   fragmentShaderSource,
   createShader,
   createProgram
-} from "../utils/webgl-utils.js";
+} from "../utils/webgl.js";
 
 export class Snow {
   constructor(canvas) {
     this.canvas = canvas;
     this.gl = canvas.getContext("webgl2");
+
     this.projectionMatrix = this.getProjectionMatrix();
 
     this.snowFlakes = this.createSnowFlakes();
@@ -30,13 +31,9 @@ export class Snow {
     this.projectionMatrix = this.getProjectionMatrix();
   }
 
-  randBetween(min, max) {
-    return min + (max - min) * Math.random();
-  }
-
   createSnowFlakes() {
-    let snowFlakes = [];
     const count = window.innerWidth / 4;
+    const snowFlakes = [];
     for (let i = 0; i < count; i++) {
       snowFlakes.push(new SnowFlake());
     }
@@ -57,7 +54,7 @@ export class Snow {
   get snowFlakesProps() {
     let snowFlakesProps = [];
     for (let snowFlake of this.snowFlakes) {
-      snowFlakesProps = [...snowFlakesProps, ...snowFlake.snowFlakeProps];
+      snowFlakesProps = [...snowFlakesProps, ...snowFlake.props];
     }
     return snowFlakesProps;
   }
